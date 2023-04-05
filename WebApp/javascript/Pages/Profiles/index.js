@@ -1,16 +1,10 @@
 import { React, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Button, Icon, Input, Menu, MenuItem } from '@ui-kitten/components';
+import { SafeAreaView, View, StyleSheet } from 'react-native';
+import { Button, Divider, Input, Menu, MenuItem, TopNavigation } from '@ui-kitten/components';
 
-const ForwardIcon = props => (
-  <Icon {...props} name='arrow-ios-forward'/>
-);
+import { AddIcon, ForwardIcon } from '../../components/Icons';
 
-const AddIcon = props => (
-  <Icon {...props} name='plus-outline'/>
-)
-
-const Profiles = ({ switchProfile }) => {
+const Profiles = ({ navigation }) => {
   const [profiles, setProfiles] = useState([]);
 
   const addProfile = value => {
@@ -19,28 +13,39 @@ const Profiles = ({ switchProfile }) => {
     setProfiles(cp);
   }
 
-  return (
-    <View style={styles.container}>
-      <Menu
-        onSelect={i => {
-          console.log(i);
-          console.log(profiles[i]);
-          switchProfile(profiles[i.row]);
-        }}
-        style={styles.menu}
-      >
-        {profiles.map((item, i) => (
-          <MenuItem
-            key={i}
-            title={item}
-            accessoryRight={ForwardIcon}
-          />
-        ))}
-      </Menu>
-      <ProfileAdder
-        onSubmit={value => addProfile(value)}
+  const renderHeader = () => {
+    return (
+      <TopNavigation
+        alignment='center'
+        title='Profiles'
       />
-    </View>
+    )
+  }
+
+  return (
+    <SafeAreaView style={{flex: 1}}>
+      {renderHeader()}
+      <Divider />
+      <View style={styles.container}>
+        <Menu
+          onSelect={i => {
+            switchProfile(profiles[i.row]);
+          }}
+          style={styles.menu}
+        >
+          {profiles.map((item, i) => (
+            <MenuItem
+              key={i}
+              title={item}
+              accessoryRight={ForwardIcon}
+            />
+          ))}
+        </Menu>
+        <ProfileAdder
+          onSubmit={value => addProfile(value)}
+        />
+      </View>
+    </SafeAreaView>
   )
 }
 

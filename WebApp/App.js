@@ -1,5 +1,6 @@
 import * as eva from '@eva-design/eva';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, StatusBar, Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { ApplicationProvider, IconRegistry, Layout } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 
@@ -11,7 +12,10 @@ export default function App() {
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={eva.dark}>
         <Layout style={styles.container}>
-          <Navigation />
+          <StatusBar />
+          <NavigationContainer>
+            <Navigation />
+          </NavigationContainer>
         </Layout>
       </ApplicationProvider>
     </>
