@@ -87,10 +87,6 @@ const styles = StyleSheet.create({
   menu: {
     flex: 1
   },
-  icon: {
-    width: 32,
-    height: 32,
-  },
   adder: {
     display: 'flex',
     flexDirection: 'row',
