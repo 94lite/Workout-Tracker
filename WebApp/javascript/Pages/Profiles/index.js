@@ -13,6 +13,12 @@ const Profiles = ({ navigation }) => {
     setProfiles(cp);
   }
 
+  const switchProfile = profile => {
+    navigation.navigate('Active', {
+      profile
+    })
+  }
+
   const renderHeader = () => {
     return (
       <TopNavigation
@@ -28,9 +34,7 @@ const Profiles = ({ navigation }) => {
       <Divider />
       <View style={styles.container}>
         <Menu
-          onSelect={i => {
-            switchProfile(profiles[i.row]);
-          }}
+          onSelect={i => switchProfile(profiles[i.row])}
           style={styles.menu}
         >
           {profiles.map((item, i) => (
