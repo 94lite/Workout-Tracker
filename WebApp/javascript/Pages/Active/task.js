@@ -10,7 +10,7 @@ const AnimatedIcon = Animated.createAnimatedComponent(Icon);
 
 const Task = (props) => {
   // passed props
-  const { name } = props;
+  const { name, initial } = props;
   // react state management
   const [active, setActive] = useState(false);
   const swipeRef = useRef();
@@ -49,12 +49,7 @@ const Task = (props) => {
     return (
       <Stopwatch
         ref={stopwatchRef}
-        initial={
-          56 * 60 * 60 * 1000
-          + 47 * 60 * 1000
-          + 32 * 1000
-          + 457
-        }
+        initial={initial}
       />
     )
   }, [])
