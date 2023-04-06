@@ -1,8 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Animated, Text, View, StyleSheet } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { ListItem, Icon } from '@ui-kitten/components';
+
+import Stopwatch from '../../components/Stopwatch';
 
 const AnimatedIcon = Animated.createAnimatedComponent(Icon);
 
@@ -11,8 +13,8 @@ const Task = (props) => {
   const { name } = props;
   // react state management
   const [active, setActive] = useState(false);
-  const [time, setTime] = useState();
-  const childRef = useRef();
+  const swipeRef = useRef();
+  const stopwatchRef = useRef();
 
   const renderLeftActions = (progress, dragX) => {
     const trans = dragX.interpolate({
@@ -22,7 +24,7 @@ const Task = (props) => {
     return (
       <RectButton style={styles.hidden}>
         <AnimatedIcon
-          name='arrow-right'
+          name={active ? 'pause-circle' : 'play-circle'}
           fill='#fff'
           style={[
             styles.actionIcon,
@@ -33,26 +35,30 @@ const Task = (props) => {
     )
   }
 
-  const startStopwatch = () => {
-    setActive(true);
-    childRef.current.close();
-  }
-
-  const renderStopwatch = () => {
+  const stopwatchAction = () => {
+    swipeRef.current.close();
     if (!active) {
-      return null
+      stopwatchRef.current.start();
+    } else {
+      stopwatchRef.current.pause();
     }
+    setActive(!active);
+  };
+
+  const renderStopwatch = useMemo(() => {
     return (
-      <Text>Hello</Text>
+      <Stopwatch
+        ref={stopwatchRef}
+      />
     )
-  }
+  }, [])
 
   return (
     <Swipeable
-      ref={childRef}
+      ref={swipeRef}
       overshootLeft={false}
       renderLeftActions={renderLeftActions}
-      onEnded={startStopwatch}
+      onSwipeableWillOpen={stopwatchAction}
     >
       <ListItem
         title={name}
@@ -66,8 +72,10 @@ const Task = (props) => {
 
 const styles = StyleSheet.create({
   actionIcon: {
-    width: 30,
-    marginHorizontal: 10
+    paddingLeft: 8,
+    paddingRight: 8,
+    width: 32,
+    marginHorizontal: 10,
   },
   hidden: {
     backgroundColor: 'rgb(51, 102, 255)',
