@@ -38,6 +38,12 @@ const Active = ({ route, navigation }) => {
         <GestureHandlerRootView style={styles.content}>
           <Task
             name='Hello World'
+            initial={
+              56 * 60 * 60 * 1000
+              + 47 * 60 * 1000
+              + 32 * 1000
+              + 457
+            }
           />
         </GestureHandlerRootView>
         <Button size='small'>

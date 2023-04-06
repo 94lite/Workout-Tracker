@@ -11,6 +11,8 @@ const AnimatedIcon = Animated.createAnimatedComponent(Icon);
 const Task = (props) => {
   // passed props
   const { name, initial } = props;
+  // passed functions
+  const { triggerDelete } = props;
   // react state management
   const [active, setActive] = useState(false);
   const swipeRef = useRef();
@@ -35,6 +37,28 @@ const Task = (props) => {
     )
   }
 
+  const renderRightActions = (progress, dragX) => {
+    const trans = dragX.interpolate({
+      inputRange: [-101, -100, -50, 0],
+      outputRange: [-1, 0, 0, 20],
+    });
+    return (
+      <RectButton
+        onPress={onPress}
+        style={styles.hidden}
+      >
+        <AnimatedIcon
+          name={'archive'}
+          fill='#fff'
+          style={[
+            styles.actionIcon,
+            { transform: [{ translateX: trans }] }
+          ]}
+        />
+      </RectButton>
+    )
+  }
+
   const stopwatchAction = () => {
     swipeRef.current.close();
     if (!active) {
@@ -43,7 +67,7 @@ const Task = (props) => {
       stopwatchRef.current.pause();
     }
     setActive(!active);
-  };
+  }
 
   const renderStopwatch = useMemo(() => {
     return (
@@ -52,14 +76,31 @@ const Task = (props) => {
         initial={initial}
       />
     )
-  }, [])
+  }, []);
+
+  const onSwipe = direction => {
+    if (direction === 'left') {
+      stopwatchAction();
+    } else {}
+  }
+
+  const onPress = () => {
+    swipeRef.current.close();
+    if (triggerDelete) {
+      triggerDelete();
+    } else {
+      console.warn('triggerDelete is not defined for Task component');
+    }
+  }
 
   return (
     <Swipeable
       ref={swipeRef}
       overshootLeft={false}
+      overshootRight={false}
       renderLeftActions={renderLeftActions}
-      onSwipeableWillOpen={stopwatchAction}
+      renderRightActions={active ? () => undefined : renderRightActions}
+      onSwipeableWillOpen={onSwipe}
     >
       <ListItem
         title={name}
@@ -73,10 +114,8 @@ const Task = (props) => {
 
 const styles = StyleSheet.create({
   actionIcon: {
-    paddingLeft: 8,
-    paddingRight: 8,
     width: 32,
-    marginHorizontal: 10,
+    marginHorizontal: 16
   },
   hidden: {
     backgroundColor: 'rgb(51, 102, 255)',
