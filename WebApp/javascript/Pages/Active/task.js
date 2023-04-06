@@ -49,6 +49,12 @@ const Task = (props) => {
     return (
       <Stopwatch
         ref={stopwatchRef}
+        initial={
+          56 * 60 * 60 * 1000
+          + 47 * 60 * 1000
+          + 32 * 1000
+          + 457
+        }
       />
     )
   }, [])

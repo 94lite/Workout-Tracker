@@ -1,26 +1,45 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, memo } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  memo
+} from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { useStopwatch } from 'react-use-precision-timer';
 
 const Stopwatch = forwardRef((props, _ref) => {
   const stopwatch = useStopwatch();
+  // passed props
+  const { initial } = props;
   // react state management
-  const [elapsedTime, setElapsedTime] = useState([ 0, 0, 0, 0 ]);
+  const [elapsedTime, setElapsedTime] = useState([0, 0, 0, 0]);
   const started = useRef(false);
   const interval = useRef();
+  useEffect(() => {
+    setElapsedTime(getTimeSplits());
+  }, []);
   useImperativeHandle(_ref, () => ({
     start: () => startOrResume(),
     pause: () => pause()
   }));
 
+  const getTimeSplits = () => {
+    var retrievedTime = stopwatch.getElapsedRunningTime();
+    if (initial) {
+      retrievedTime += initial;
+    }
+    const hours = Math.floor(retrievedTime / (1000 * 60 * 60));
+    const minutes = Math.floor((retrievedTime / (1000 * 60)) % 60);
+    const seconds = Math.floor((retrievedTime / 1000) % 60);
+    const milliseconds = Math.floor((retrievedTime % 1000) / 10);
+    return [ hours, minutes, seconds, milliseconds ]
+  }
+
   const startOrResume = () => {
     interval.current = setInterval(() => {
-      const retrievedTime = stopwatch.getElapsedRunningTime();
-      const hours = Math.floor(retrievedTime / (1000 * 60 * 60));
-      const minutes = Math.floor((retrievedTime / (1000 * 60)) % 60);
-      const seconds = Math.floor((retrievedTime / 1000) % 60);
-      const milliseconds = Math.floor((retrievedTime % 1000) / 10);
-      setElapsedTime([ hours, minutes, seconds, milliseconds ]);
+      setElapsedTime(getTimeSplits());
     }, 20);
     if (started.current) {
       stopwatch.resume();
