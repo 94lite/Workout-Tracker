@@ -3,8 +3,8 @@ import { SafeAreaView, Text, View, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Button, Divider, TopNavigation, TopNavigationAction } from '@ui-kitten/components';
 
-import { BackIcon } from '../../components/Icons';
-import Task from './task';
+import { AddIcon, BackIcon } from '../../components/Icons';
+import Task from './Task';
 
 const Active = ({ route, navigation }) => {
   const { profile } = route.params;
@@ -16,15 +16,19 @@ const Active = ({ route, navigation }) => {
         title={profile}
         subtitle='Active Profile'
         accessoryLeft={BackAction}
+        accessoryRight={NewEntryAction}
       />
     )
   }
   const BackAction = () => (
     <TopNavigationAction icon={BackIcon} onPress={navigateBack}/>
   );
+  const NewEntryAction = () => (
+    <TopNavigationAction icon={AddIcon} onPress={() => null}/>
+  );
   const navigateBack = () => {
     navigation.goBack();
-  };
+  }
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -32,7 +36,9 @@ const Active = ({ route, navigation }) => {
       <Divider />
       <View style={styles.container}>
         <GestureHandlerRootView style={styles.content}>
-          <Task />
+          <Task
+            name='Hello World'
+          />
         </GestureHandlerRootView>
         <Button size='small'>
           Start
