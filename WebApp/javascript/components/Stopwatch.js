@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, forwardRef, useImperativeHandle, memo } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { useStopwatch } from 'react-use-precision-timer';
 
@@ -48,21 +48,21 @@ const Stopwatch = forwardRef((props, _ref) => {
   )
 });
 
-const Segment = ({ value }) => {
+const Segment = memo(({ value }) => {
   var arrValue = value.toString().split('');
   if (arrValue.length < 2) {
     arrValue.unshift('0');
   }
   return arrValue.map((digit, i) => <Digit key={i} digit={digit}/>)
-}
+})
 
-const Digit = ({ digit }) => {
+const Digit = memo(({ digit }) => {
   return (
     <View style={styles.digit}>
       <Text style={styles.digitText}>{digit}</Text>
     </View>
   )
-}
+})
 
 const styles = StyleSheet.create({
   flex: {
