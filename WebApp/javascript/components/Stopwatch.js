@@ -40,7 +40,7 @@ const Stopwatch = forwardRef((props, _ref) => {
   const startOrResume = () => {
     interval.current = setInterval(() => {
       setElapsedTime(getTimeSplits());
-    }, 20);
+    }, 50);
     if (started.current) {
       stopwatch.resume();
     } else {
