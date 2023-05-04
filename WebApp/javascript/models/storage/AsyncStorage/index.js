@@ -26,6 +26,15 @@ import {
     - Property: Name, string
 */
 
+export async function getAllKeys() {
+  return await AsyncStorage.getAllKeys();
+}
+
+export async function deleteAllKeys() {
+  const keys = await getAllKeys();
+  return await AsyncStorage.multiRemove(keys);
+}
+
 export default class StorageAsyncStorage extends IStorage {
   constructor(params) {
     super(params);

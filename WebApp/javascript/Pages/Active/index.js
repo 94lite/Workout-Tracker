@@ -1,5 +1,5 @@
-import React from 'react';
-import { SafeAreaView, Text, View, StyleSheet } from 'react-native'
+import React, { useState } from 'react';
+import { SafeAreaView, View, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Button, Divider, TopNavigation, TopNavigationAction } from '@ui-kitten/components';
 
@@ -8,6 +8,7 @@ import Task from './Task';
 
 const Active = ({ route, navigation }) => {
   const { profile } = route.params;
+  const [tasks, setTasks] = useState([]);
 
   const renderHeader = () => {
     return (
@@ -36,15 +37,13 @@ const Active = ({ route, navigation }) => {
       <Divider />
       <View style={styles.container}>
         <GestureHandlerRootView style={styles.content}>
-          <Task
-            name='Hello World'
-            initial={
-              56 * 60 * 60 * 1000
-              + 47 * 60 * 1000
-              + 32 * 1000
-              + 457
-            }
-          />
+          {tasks.map((task, i) => (
+            <Task
+              key={i}
+              name={task.name}
+              initial={task.time}
+            />
+          ))}
         </GestureHandlerRootView>
         <Button size='small'>
           Start
