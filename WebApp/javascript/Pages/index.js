@@ -22,7 +22,13 @@ deleteAllKeys().then(res => {
   storage.getCategoryList().then(categories => {
     const category = categories[0];
     storage.addProfile("first profile", category).then(profile => {
-      console.warn(profile.id, profile.name);
+      storage.getProfile(profile.id).then(profile2 => {
+        profile2.updateName("new name").then(res => {
+          storage.getProfile(profile.id).then(profile3 => {
+            console.warn(profile3.id, profile3.name);
+          });
+        });
+      });
     });
   })
 });

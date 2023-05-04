@@ -33,6 +33,13 @@ export class ProfileUpdateError extends Error {
   }
 }
 
+export class ProfileNotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = ProfileNotFoundError;
+  }
+}
+
 export class TaskUpdateError extends Error {
   constructor(message) {
     super(message);

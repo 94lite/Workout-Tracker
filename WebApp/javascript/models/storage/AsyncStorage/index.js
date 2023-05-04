@@ -5,7 +5,8 @@ import {
   CategoryDoesNotExistError,
   DuplicateNameError,
   IDGeneratorMaxTriesError,
-  IllegalCharError
+  IllegalCharError,
+  ProfileNotFoundError
 } from '../exceptions';
 
 /*
@@ -71,6 +72,20 @@ export default class StorageAsyncStorage extends IStorage {
     return this.__getProfilesList();
   }
 
+  async __getProfile(profileID) {
+    const profiles = await this.getProfilesList();
+    for (var i = 0; i < profiles.length; i++) {
+      if (profileID === profiles[i].id) {
+        return profiles[i]
+      }
+    }
+    throw new ProfileNotFoundError(profileID);
+  }
+
+  getProfile(profileID) {
+    return this.__getProfile(profileID);
+  }
+
   async __addProfile(name, category) {
     // validate category is defined and exists
     const categories = await this.getCategoryList();
@@ -113,6 +128,23 @@ export default class StorageAsyncStorage extends IStorage {
 
   addProfile(name, category) {
     return this.__addProfile(name, category);
+  }
+
+  async __updateProfile(profile, updateProps) {
+    const profiles = await this.getProfilesList();
+    const updater = [];
+    profiles.forEach(profile => {
+      updater.push({
+        ID: profile.id,
+        Name: profile.name,
+        Category: profile.category.id
+      });
+    });
+    await AsyncStorage.setItem('@Profiles', JSON.stringify(updater));
+  }
+
+  updateProfile(profile, updateProps) {
+    return this.__updateProfile(profile, updateProps);
   }
 
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
