@@ -35,6 +35,8 @@ export default class IStorage {
     params:
       - name: string
       - category: Category
+    returns:
+      - profile: Profile
     */
     throw new UnimplementedError("'addProfile' is not implemented");
   }
@@ -124,6 +126,14 @@ export default class IStorage {
   // C A T E G O R Y
   // _________________________
 
+  getCategoryList() {
+    /*
+    returns:
+      - Category[]
+    */
+    throw new UnimplementedError("'getCategoryList' is not implemented");
+  }
+
   addCategory() {
     throw new UnimplementedError("'addCategory' is not implemented");
   }
@@ -186,7 +196,7 @@ export class Profile {
     // validate newName is defined and is unique
     const valid = await this.validateNewName(newName);
     if (!valid) {
-      throw DuplicateNameError(newName);
+      throw new DuplicateNameError(newName);
     }
     const prev = this.name;
     this.name = newName;
@@ -247,7 +257,7 @@ export class Task {
     // validate newName is defined and is unique under profile
     const valid = await this.validateNewName(newName);
     if (!valid) {
-      throw DuplicateNameError(newName);
+      throw new DuplicateNameError(newName);
     }
     await this.updateProp("Name", newName);
   }
