@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import IStorage, { Profile, Task, Category } from '..';
-import { v4 as uuidv4 } from 'uuid';
+import uuid from 'react-native-uuid';
 import {
   CategoryDoesNotExistError,
   DuplicateNameError,
@@ -65,8 +65,7 @@ export default class StorageAsyncStorage extends IStorage {
   async __addProfile(name, category) {
     // validate category is defined and exists
     const categories = await this.getCategoryList();
-    const categoryNames = categories.map(item => item.name);
-    if (!(category.name in categoryNames)) {
+    if (!categories.includes(category)) {
       throw new CategoryDoesNotExistError(category.name);
     }
     // adding new profile
@@ -125,10 +124,10 @@ export default class StorageAsyncStorage extends IStorage {
         this.memoCategories = [];
       }
       const categoryNames = this.memoCategories.map(category => category.name);
-      if (!("work" in categoryNames)) {
+      if (!categoryNames.includes("work")) {
         this.memoCategories.push(new Category({ ID: "work", Name: "work" }));
       }
-      if (!("gym" in categoryNames)) {
+      if (!categoryNames.includes("gym")) {
         this.memoCategories.push(new Category({ ID: "gym", Name: "gym" }));
       }
     }
@@ -169,7 +168,7 @@ function generateID(existingIDs) {
       throw new IDGeneratorMaxTriesError(`Failed to generate ID within ${MAX_GENERATOR_TRIES} tries`)
     }
     i++;
-    id = uuidv4();
+    id = uuid.v4();
   }
   return id
 }
