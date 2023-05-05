@@ -6,7 +6,30 @@ import {
 } from "./exceptions"
 
 export default class IStorage {
-  constructor(params) {}
+  constructor(params, onReady) {
+    this.ready = undefined;
+    this.start().then(res => {
+      this.ready = res;
+      if (onReady !== undefined) {
+        onReady(this.ready);
+      }
+    });
+  }
+
+  // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+  // S T O R A G E
+  // _________________________
+
+  async start() {
+    /*
+    called when storage is created
+    reserved function to call preprocess steps if the storage
+    used requires start up processes
+    returns:
+      - boolean
+    */
+    throw new UnimplementedError("'start' is not implemented");
+  }
 
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
   // P R O F I L E
@@ -132,6 +155,16 @@ export default class IStorage {
       - Category[]
     */
     throw new UnimplementedError("'getCategoryList' is not implemented");
+  }
+
+  getCategory(categoryID) {
+    /*
+    params:
+      - categoryID: string
+    returns:
+      - Category
+    */
+    throw new UnimplementedError("'getCategory' is not implemented");
   }
 
   addCategory() {

@@ -25,7 +25,7 @@ deleteAllKeys().then(res => {
       storage.getProfile(profile.id).then(profile2 => {
         profile2.updateName("new name").then(res => {
           storage.getProfile(profile.id).then(profile3 => {
-            console.warn(profile3.id, profile3.name);
+            console.warn(profile3.id, profile3.name, profile3.category);
           });
         });
       });

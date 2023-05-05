@@ -37,14 +37,23 @@ export async function deleteAllKeys() {
 }
 
 export default class StorageAsyncStorage extends IStorage {
-  constructor(params) {
-    super(params);
+  constructor(params, onReady) {
+    super(params, onReady);
     this.storageType = 'AsyncStorage';
     this.memoProfiles = undefined;
-    this.memoProfile = undefined;
+    this.memoProfile = [undefined, undefined];
     this.memoTasks = undefined;
     this.memoTask = undefined;
     this.memoCategories = undefined;
+  }
+
+  // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+  // S T O R A G E
+  // _________________________
+
+  async start() {
+    await this.getCategoryList();
+    return true;
   }
 
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -57,7 +66,12 @@ export default class StorageAsyncStorage extends IStorage {
       if (profiles !== null) {
         try {
           const parsedProfiles = JSON.parse(profiles);
-          this.memoProfiles = parsedProfiles.map(profile => (new Profile(this, profile)));
+          this.memoProfiles = [];
+          for (var i = 0; i < parsedProfiles.length; i++) {
+            const profile = parsedProfiles[i];
+            profile.category = await this.getCategory(profile.Category);
+            this.memoProfiles.push(profile);
+          }
         } catch (err) {
           this.memoProfiles = [];
         }
@@ -73,9 +87,13 @@ export default class StorageAsyncStorage extends IStorage {
   }
 
   async __getProfile(profileID) {
+    if (profileID === this.memoProfile[0]) {
+      return this.memoProfile[1];
+    };
     const profiles = await this.getProfilesList();
     for (var i = 0; i < profiles.length; i++) {
       if (profileID === profiles[i].id) {
+        this.memoProfile = [profileID, profiles[i]];
         return profiles[i]
       }
     }
@@ -88,10 +106,7 @@ export default class StorageAsyncStorage extends IStorage {
 
   async __addProfile(name, category) {
     // validate category is defined and exists
-    const categories = await this.getCategoryList();
-    if (!categories.includes(category)) {
-      throw new CategoryDoesNotExistError(category.name);
-    }
+    await this.getCategory(category.id);
     // adding new profile
     const profiles = await this.getProfilesList();
     const updater = [];
@@ -120,6 +135,7 @@ export default class StorageAsyncStorage extends IStorage {
     try {
       await AsyncStorage.setItem('@Profiles', JSON.stringify(updater));
     } catch (err) {}
+    newProfile.Category = category;
     const profileProfile = new Profile(this, newProfile);
     profiles.push(profileProfile);
     this.memoProfiles = profiles;
@@ -177,6 +193,20 @@ export default class StorageAsyncStorage extends IStorage {
 
   getCategoryList() {
     return this.__getCategoryList()
+  }
+
+  async __getCategory(categoryID) {
+    const categories = await this.getCategoryList();
+    for (var i = 0; i < categories.length; i++) {
+      if (categoryID === categories[i].id) {
+        return categories[i]
+      }
+    }
+    throw new CategoryDoesNotExistError(categoryID);
+  }
+
+  getCategory(categoryID) {
+    return this.__getCategory(categoryID);
   }
 }
 
