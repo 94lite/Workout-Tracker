@@ -1,22 +1,35 @@
-import { React, useState } from 'react';
+import { React, useState, useEffect } from 'react';
 import { SafeAreaView, View, StyleSheet } from 'react-native';
-import { Button, Divider, Input, Menu, MenuItem, TopNavigation } from '@ui-kitten/components';
+import { Divider, Menu, MenuItem, Modal, TopNavigation, TopNavigationAction } from '@ui-kitten/components';
 
 import { AddIcon, ForwardIcon } from '../../components/Icons';
+import ProfileAdder from './ProfileAdder';
+
+import { storage } from '..';
 
 const Profiles = ({ navigation }) => {
+  // react state management
   const [profiles, setProfiles] = useState([]);
-
-  const addProfile = value => {
-    const cp = [...profiles];
-    cp.push(value);
-    setProfiles(cp);
-  }
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    storage.getProfilesList().then(res => {
+      setProfiles(res);
+    });
+  }, [])
 
   const switchProfile = profile => {
     navigation.navigate('Active', {
-      profile
+      profile: profile.name
     })
+  }
+  
+  const addProfile = (name, category) => {
+    storage.addProfile(name, category)
+      .then(res => {
+        console.log("visible state is updating");
+        setVisible(false)
+      })
+      .catch(err => console.warn(err));
   }
 
   const renderHeader = () => {
@@ -24,9 +37,13 @@ const Profiles = ({ navigation }) => {
       <TopNavigation
         alignment='center'
         title='Profiles'
+        accessoryRight={NewEntryAction}
       />
     )
   }
+  const NewEntryAction = () => (
+    <TopNavigationAction icon={AddIcon} onPress={() => setVisible(true)}/>
+  );
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -40,42 +57,23 @@ const Profiles = ({ navigation }) => {
           {profiles.map((item, i) => (
             <MenuItem
               key={i}
-              title={item}
+              title={item.name}
               accessoryRight={ForwardIcon}
             />
           ))}
         </Menu>
-        <ProfileAdder
-          onSubmit={value => addProfile(value)}
-        />
       </View>
+      <Modal
+        visible={visible}
+        backdropStyle={styles.backdrop}
+        onBackdropPress={() => setVisible(false)}
+        style={styles.modal}
+      >
+        <ProfileAdder
+          onSubmit={(name, category) => addProfile(name, category)}
+        />
+      </Modal>
     </SafeAreaView>
-  )
-}
-
-const ProfileAdder = ({ onSubmit }) => {
-  const [value, setValue] = useState('');
-  
-  const onPress = () => {
-    onSubmit(value);
-    setValue('');
-  }
-
-  return (
-    <View style={styles.adder}>
-      <Input
-        placeholder='New Profile'
-        value={value}
-        onChangeText={nextValue => setValue(nextValue)}
-        style={styles.adderInput}
-        onSubmitEditing={onPress}
-      />
-      <Button
-        size='small'
-        accessoryLeft={AddIcon}
-        onPress={onPress}
-      />
-    </View>
   )
 }
 
@@ -87,12 +85,14 @@ const styles = StyleSheet.create({
   menu: {
     flex: 1
   },
-  adder: {
-    display: 'flex',
+  modal: {
+    color: '#fff',
+    flexGrow: 1,
     flexDirection: 'row',
+    padding: 32
   },
-  adderInput: {
-    flexGrow: 1
+  backdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)'
   }
 });
 
