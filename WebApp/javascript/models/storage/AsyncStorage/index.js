@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import IStorage, { Profile, Task, Category } from '..';
+import IStorage, { Profile, Task, Category, SubCategory, Label, Date } from '..';
 import uuid from 'react-native-uuid';
 import {
   CategoryDoesNotExistError,
@@ -25,6 +25,10 @@ import {
 @Tasks.[TaskID] <- stores details for a specific task
   Object:
     - Property: Name, string
+
+@Categories
+
+@SubCategories
 */
 
 export async function getAllKeys() {
@@ -40,10 +44,15 @@ export default class StorageAsyncStorage extends IStorage {
   constructor(params, onReady) {
     super(params, onReady);
     this.storageType = 'AsyncStorage';
+    // return value: Profile[]
     this.memoProfiles = undefined;
+    // profileID, return value: Profile
     this.memoProfile = [undefined, undefined];
-    this.memoTasks = undefined;
+    // profileID, return value: Task[]
+    this.memoTasks = [undefined, undefined];
+    // taskID, return value: Task
     this.memoTask = undefined;
+    // return value: Category[]
     this.memoCategories = undefined;
   }
 
@@ -69,8 +78,8 @@ export default class StorageAsyncStorage extends IStorage {
           this.memoProfiles = [];
           for (var i = 0; i < parsedProfiles.length; i++) {
             const profile = parsedProfiles[i];
-            profile.category = await this.getCategory(profile.Category);
-            this.memoProfiles.push(profile);
+            profile.Category = await this.getCategory(profile.Category);
+            this.memoProfiles.push(new Profile(this, profile));
           }
         } catch (err) {
           this.memoProfiles = [];
@@ -164,6 +173,58 @@ export default class StorageAsyncStorage extends IStorage {
   }
 
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+  // T A S K
+  // _________________________
+
+  async __getTaskList(profileID) {
+    if (this.memoTasks[0] !== profileID) {
+      const tasks = await AsyncStorage.getItem('@Tasks');
+      if (tasks !== null) {
+        try {
+          const parsedTasks = JSON.parse(tasks);
+          this.memoTasks = [profileID, []];
+          if (profileID in tasks) {
+            for (var i = 0; i < parsedTasks.length; i++) {
+              const task = parsedTasks[i];
+              task.SubCategory = await this.getSubCategory(task.SubCategory);
+              task.Dates = task.Dates.map(date => new Date(date.Year, date.Month, date.Day));
+              for (var j = 0; j < task.Labels.length; j++) {
+                task.Label[j] = await this.getLabel(task.Label[j]);
+              }
+              this.memoTasks[1].push(new Task(this, task));
+            }
+          }
+        } catch (err) {
+          this.memoTasks = [profileID, []];
+        }
+      } else {
+        this.memoTasks = [profileID, []];
+      }
+    }
+    return this.memoTasks[1]
+  }
+
+  getTaskList(profileID) {
+    return this.__getTaskList(profileID);
+  }
+
+  async getTask(taskID) {}
+
+  getTask(taskID) {}
+
+  async __addTask(profileID, name, subcategory, description, values, labels) {}
+
+  addTask(profileID, name, subcategory, description, values, labels) {}
+
+  async __updateTask(task, updateProps) {}
+
+  updateTask(task, updateProps) {}
+
+  async __deleteTask(taskID) {}
+
+  deleteTask(taskID) {}
+
+  // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
   // C A T E G O R Y
   // _________________________
 
@@ -243,3 +304,11 @@ function generateID(existingIDs) {
   }
   return id
 }
+
+// ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// S U B C A T E G O R Y
+// _________________________
+
+// ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+// L A B E L
+// _________________________
