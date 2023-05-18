@@ -194,14 +194,14 @@ export default class IStorage {
     throw new UnimplementedError("'getSubCategoryList' is not implemented");
   }
 
-  getSubCatgory(subCategoryID) {
+  getSubCategory(subCategoryID) {
     /*
     params:
       - subCategoryID: string
     returns:
       - SubCategory
     */
-    throw new UnimplementedError("'getSubCatgory' is not implemented");
+    throw new UnimplementedError("'getSubCategory' is not implemented");
   }
 
   addSubCategory() {

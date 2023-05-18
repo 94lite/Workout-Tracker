@@ -47,9 +47,23 @@ export class TaskUpdateError extends Error {
   }
 }
 
-export class CategoryDoesNotExistError extends Error {
+export class TaskNotFoundError extends Error {
   constructor(message) {
     super(message);
-    this.name = "CategoryDoesNotExistError";
+    this.name = "TaskNotFoundError";
+  }
+}
+
+export class CategoryNotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "CategoryNotFoundError";
+  }
+}
+
+export class SubCategoryNotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "SubCategoryNotFoundError";
   }
 }

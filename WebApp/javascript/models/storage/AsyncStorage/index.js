@@ -2,11 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import IStorage, { Profile, Task, Category, SubCategory, Label, Date } from '..';
 import uuid from 'react-native-uuid';
 import {
-  CategoryDoesNotExistError,
+  CategoryNotFoundError,
   DuplicateNameError,
   IDGeneratorMaxTriesError,
   IllegalCharError,
-  ProfileNotFoundError
+  ProfileNotFoundError,
+  SubCategoryNotFoundError,
+  TaskNotFoundError
 } from '../exceptions';
 
 /*
@@ -27,8 +29,19 @@ import {
     - Property: Name, string
 
 @Categories
+  ...
 
-@SubCategories
+@SubCategories <- mapping of category IDs against associated subcategory IDs
+  Object:
+    - Keys: categoryID, string
+    - Values: subCategoryIDs, string[]
+
+@SubCategories.[SubCategoryID]
+  ...
+
+@Labels
+  ...
+
 */
 
 export async function getAllKeys() {
@@ -44,16 +57,18 @@ export default class StorageAsyncStorage extends IStorage {
   constructor(params, onReady) {
     super(params, onReady);
     this.storageType = 'AsyncStorage';
-    // return value: Profile[]
-    this.memoProfiles = undefined;
-    // profileID, return value: Profile
-    this.memoProfile = [undefined, undefined];
-    // profileID, return value: Task[]
-    this.memoTasks = [undefined, undefined];
-    // taskID, return value: Task
-    this.memoTask = undefined;
-    // return value: Category[]
-    this.memoCategories = undefined;
+    // ...                   return value: Profile[]
+    this.memoProfiles      = undefined;
+    // profileID,            return value: Profile
+    this.memoProfile       = [undefined, undefined];
+    // profileID,            return value: Task[]
+    this.memoTasks         = [undefined, undefined];
+    // taskID,               return value: Task
+    this.memoTask          = [undefined, undefined];
+    // ...                   return value: Category[]
+    this.memoCategories    = undefined;
+    // categoryID,           return value: SubCategory[]
+    this.memoSubCategories = [undefined, undefined];
   }
 
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
@@ -183,15 +198,11 @@ export default class StorageAsyncStorage extends IStorage {
         try {
           const parsedTasks = JSON.parse(tasks);
           this.memoTasks = [profileID, []];
-          if (profileID in tasks) {
-            for (var i = 0; i < parsedTasks.length; i++) {
-              const task = parsedTasks[i];
-              task.SubCategory = await this.getSubCategory(task.SubCategory);
-              task.Dates = task.Dates.map(date => new Date(date.Year, date.Month, date.Day));
-              for (var j = 0; j < task.Labels.length; j++) {
-                task.Label[j] = await this.getLabel(task.Label[j]);
-              }
-              this.memoTasks[1].push(new Task(this, task));
+          if (profileID in parsedTasks) {
+            for (var i = 0; i < parsedTasks[profileID].length; i++) {
+              const taskID = parsedTasks[profileID][i];
+              const task = await this.getTask(taskID);
+              this.memoTasks[1].push(task);
             }
           }
         } catch (err) {
@@ -208,21 +219,44 @@ export default class StorageAsyncStorage extends IStorage {
     return this.__getTaskList(profileID);
   }
 
-  async getTask(taskID) {}
+  async __getTask(taskID) {
+    if (this.memoTask[0] !== taskID) {
+      const task = await AsyncStorage.getItem(`@Tasks.${taskID}`);
+      if (task === null) {
+        throw new TaskNotFoundError(taskID);
+      }
+      const parsedTask = JSON.parse(task);
+      parsedTask.SubCategory = await this.getSubCategory(parsedTask.SubCategory);
+      parsedTask.Dates = parsedTask.Dates.map(date => new Date(date.Year, date.Month, date.Day));
+      for (var i = 0; i < parsedTask.Labels.length; i++) {
+        parsedTask.Label[j] = await this.getLabel(parsedTask.Label[j]);
+      }
+      this.memoTask = [taskID, new Task(this, parsedTask)];
+    }
+    return this.memoTask[1];
+  }
 
-  getTask(taskID) {}
+  getTask(taskID) {
+    return this.__getTask(taskID);
+  }
 
   async __addTask(profileID, name, subcategory, description, values, labels) {}
 
-  addTask(profileID, name, subcategory, description, values, labels) {}
+  addTask(profileID, name, subcategory, description, values, labels) {
+    return this.__addTask(profileID, name, subcategory, description, values, labels);
+  }
 
   async __updateTask(task, updateProps) {}
 
-  updateTask(task, updateProps) {}
+  updateTask(task, updateProps) {
+    return this.__updateTask(task, updateProps);
+  }
 
   async __deleteTask(taskID) {}
 
-  deleteTask(taskID) {}
+  deleteTask(taskID) {
+    return this.__deleteTask(taskID);
+  }
 
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
   // C A T E G O R Y
@@ -263,12 +297,40 @@ export default class StorageAsyncStorage extends IStorage {
         return categories[i]
       }
     }
-    throw new CategoryDoesNotExistError(categoryID);
+    throw new CategoryNotFoundError(categoryID);
   }
 
   getCategory(categoryID) {
     return this.__getCategory(categoryID);
   }
+
+  // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+  // S U B C A T E G O R Y
+  // _________________________
+
+  async __getSubCategoryList(categoryID) {}
+
+  getSubCategoryList(categoryID) {
+    return this.__getSubCategoryList(categoryID);
+  }
+
+  async __getSubCategory(subCategoryID) {
+    const subCategory = await AsyncStorage.getItem(`@SubCategories.${subCategoryID}`);
+    if (subCategory === null) {
+      throw new SubCategoryNotFoundError(subCategoryID);
+    }
+    const parsedSubCategory = JSON.parse(subCategory);
+    parsedSubCategory.ParentCategory = await this.getCategory(parsedSubCategory.ParentCategory);
+    return new SubCategory(parsedSubCategory)
+  }
+
+  getSubCategory(subCategoryID) {
+    return this.__getSubCategory(subCategoryID);
+  }
+
+  // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+  // L A B E L
+  // _________________________
 }
 
 const ILLEGAL_CHARS = [
@@ -304,11 +366,3 @@ function generateID(existingIDs) {
   }
   return id
 }
-
-// ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-// S U B C A T E G O R Y
-// _________________________
-
-// ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-// L A B E L
-// _________________________
