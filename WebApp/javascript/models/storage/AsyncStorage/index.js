@@ -11,39 +11,6 @@ import {
   TaskNotFoundError
 } from '../exceptions';
 
-/*
-@Profiles <- stores all profile data
-  Array of Objects
-  Each Object:
-    - Property: ID, string
-    - Property: Name, string
-    - Property: Category, string
-
-@Tasks <- mapping of profile IDs against associated task IDs
-  Object:
-    - Keys: profileID, string
-    - Values: taskIDs, string[]
-
-@Tasks.[TaskID] <- stores details for a specific task
-  Object:
-    - Property: Name, string
-
-@Categories
-  ...
-
-@SubCategories <- mapping of category IDs against associated subcategory IDs
-  Object:
-    - Keys: categoryID, string
-    - Values: subCategoryIDs, string[]
-
-@SubCategories.[SubCategoryID]
-  ...
-
-@Labels
-  ...
-
-*/
-
 export async function getAllKeys() {
   return await AsyncStorage.getAllKeys();
 }
@@ -83,6 +50,15 @@ export default class StorageAsyncStorage extends IStorage {
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
   // P R O F I L E
   // _________________________
+
+  /*
+  @Profiles <- stores all profile data
+    Array of Objects
+    Each Object:
+      - Property: ID, string(id)
+      - Property: Name, string
+      - Property: Category, string(id)
+  */
 
   async __getProfilesList() {
     if (this.memoProfiles === undefined) {
@@ -158,7 +134,9 @@ export default class StorageAsyncStorage extends IStorage {
     // add new profile to @Profiles
     try {
       await AsyncStorage.setItem('@Profiles', JSON.stringify(updater));
-    } catch (err) {}
+    } catch (err) {
+      throw new Error("Failed to save @Profiles");
+    }
     newProfile.Category = category;
     const profileProfile = new Profile(this, newProfile);
     profiles.push(profileProfile);
@@ -191,6 +169,13 @@ export default class StorageAsyncStorage extends IStorage {
   // T A S K
   // _________________________
 
+  /*
+  @Tasks <- mapping of profile IDs against associated task IDs
+    Object:
+      - Keys: profileID, string(id)
+      - Values: taskIDs, string(id)[]
+  */
+
   async __getTaskList(profileID) {
     if (this.memoTasks[0] !== profileID) {
       const tasks = await AsyncStorage.getItem('@Tasks');
@@ -219,6 +204,22 @@ export default class StorageAsyncStorage extends IStorage {
     return this.__getTaskList(profileID);
   }
 
+  /*
+  @Tasks.[TaskID] <- stores details for a specific task
+    Object:
+      - Property: ProfileID, string(id)
+      - Property: SubCategory, string(id)
+      - Property: Name, string
+      - Property: Description, string
+      - Property: Time, int
+      - Property: Values, ???
+      - Property: Dates, Object[]
+        - Property: Year, int
+        - Property: Month, int
+        - Property: Day, int
+      - Property: Labels, string(id)[]
+  */
+
   async __getTask(taskID) {
     if (this.memoTask[0] !== taskID) {
       const task = await AsyncStorage.getItem(`@Tasks.${taskID}`);
@@ -240,7 +241,52 @@ export default class StorageAsyncStorage extends IStorage {
     return this.__getTask(taskID);
   }
 
-  async __addTask(profileID, name, subcategory, description, values, labels) {}
+  async __addTask(profileID, name, subcategory, description, values, labels) {
+    const tasks = await AsyncStorage.getItem('@Tasks');
+    const parsedTasks = JSON.parse(tasks);
+    const taskIDs = Object.entries(parsedTasks).reduce((acc, [_, tids]) => {
+      tids.forEach(tid => {
+        acc[tid] = true
+      });
+      return acc;
+    }, {});
+    const taskID = generateID(taskIDs);
+    if (profileID in parsedTasks) {
+      parsedTasks[profileID].push(taskID);
+    } else {
+      parsedTasks[profileID] = [taskID];
+    }
+    const newTask = {
+      ProfileID: profileID,
+      SubCategory: subcategory.id,
+      Name: name,
+      Description: description,
+      Time: 0,
+      Values: null,
+      Dates: [],
+      Labels: Array.isArray(labels) ? labels.map(label => label.id) : []
+    }
+    const storeKey = `@Tasks.[${taskID}]`;
+    try {
+      await AsyncStorage.setItem(storeKey, JSON.stringify(newTask));
+    } catch (err) {
+      throw new Error(`Failed to save ${storeKey}`);
+    }
+    try {
+      await AsyncStorage.setItem('@Tasks', JSON.stringify(parsedTasks));
+    } catch (err) {
+      try {
+        await this.deleteTask(taskID);
+      } catch (err) {}
+      throw new Error(`Failed to save @Tasks`);
+    }
+    newTask.ID = taskID;
+    newTask.SubCategory = subcategory;
+    newTask.Labels = Array.isArray(labels) ? labels : [];
+    const taskTask = new Task(this, newTask);
+    this.memoTask = [taskID, taskTask];
+    return this.memoTask[1];
+  }
 
   addTask(profileID, name, subcategory, description, values, labels) {
     return this.__addTask(profileID, name, subcategory, description, values, labels);
@@ -261,6 +307,11 @@ export default class StorageAsyncStorage extends IStorage {
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
   // C A T E G O R Y
   // _________________________
+
+  /*
+  @Categories
+    ...
+  */
 
   async __getCategoryList() {
     if (this.memoCategories === undefined) {
@@ -308,11 +359,23 @@ export default class StorageAsyncStorage extends IStorage {
   // S U B C A T E G O R Y
   // _________________________
 
+  /*
+  @SubCategories <- mapping of category IDs against associated subcategory IDs
+    Object:
+      - Keys: categoryID, string(id)
+      - Values: subCategoryIDs, string(id)[]
+  */
+
   async __getSubCategoryList(categoryID) {}
 
   getSubCategoryList(categoryID) {
     return this.__getSubCategoryList(categoryID);
   }
+
+  /*
+  @SubCategories.[SubCategoryID]
+    ...
+  */
 
   async __getSubCategory(subCategoryID) {
     const subCategory = await AsyncStorage.getItem(`@SubCategories.${subCategoryID}`);
@@ -331,6 +394,16 @@ export default class StorageAsyncStorage extends IStorage {
   // ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
   // L A B E L
   // _________________________
+
+  /*
+  @Labels
+    ...
+  */
+
+  /*
+  @Labels.[LabelID]
+    ...
+  */
 }
 
 const ILLEGAL_CHARS = [

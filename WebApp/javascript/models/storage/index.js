@@ -121,7 +121,7 @@ export default class IStorage {
       - values: generic[], (optional - based on subcategory requirements)
       - labels: Label[], optional
     returns:
-      - taskID: string
+      - task: Task
     */
     throw new UnimplementedError("'addTask' is not implemented");
   }
